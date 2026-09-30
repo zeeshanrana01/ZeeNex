@@ -1,6 +1,7 @@
 """Local models served by Ollama via the official Python SDK."""
 
 from collections.abc import AsyncIterator
+from typing import Any
 
 import httpx
 from ollama import AsyncClient, ResponseError
