@@ -13,11 +13,16 @@ from app import __version__
 from app.core.config import Settings, get_settings
 from app.core.logging import configure_logging
 from app.providers.registry import ProviderRegistry, build_providers
-from app.routes import chat, health, models
+from app.routes import chat, health, models, images
+from app.db.session import init_db
+from app.voice import VoiceSettings, mount_voice
+from app.voice_brain import chat_brain
 
 
 def create_app(
-    settings: Settings | None = None, registry: ProviderRegistry | None = None
+    settings: Settings | None = None,
+    registry: ProviderRegistry | None = None,
+    voice_settings: VoiceSettings | None = None,
 ) -> FastAPI:
     settings = settings or get_settings()
     configure_logging(settings.log_level)
@@ -25,6 +30,7 @@ def create_app(
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
         app.state.settings = settings
+        await init_db()
         app.state.registry = registry or ProviderRegistry(
             build_providers(settings), settings.model_cache_ttl_seconds
         )
@@ -44,8 +50,9 @@ def create_app(
         allow_methods=["GET", "POST", "OPTIONS"],
         allow_headers=["*"],
     )
-    for router in (health.router, models.router, chat.router):
+    for router in (health.router, models.router, chat.router, images.router):
         app.include_router(router, prefix="/api")
+    mount_voice(app, brain=chat_brain, settings=voice_settings)  # voice mode (LiveKit)
     return app
 
 

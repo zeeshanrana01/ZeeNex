@@ -2,6 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import AsyncIterator
+from typing import Any
 
 from app.schemas import ChatMessage, ModelInfo
 
@@ -30,13 +31,17 @@ class Provider(ABC):
         """Return the models this provider can serve right now."""
 
     @abstractmethod
+    def get_tools(self) -> list[dict[str, Any]]:
+        """Return the registered skills/tools in the provider's expected format."""
+
+    @abstractmethod
     def stream_chat(
         self,
         model: str,
         messages: list[ChatMessage],
         temperature: float | None = None,
-    ) -> AsyncIterator[str]:
-        """Yield text deltas for a chat completion."""
+    ) -> AsyncIterator[str | dict[str, Any]]:
+        """Yield text deltas or tool calls for a chat completion."""
 
     async def aclose(self) -> None:  # noqa: B027 - optional hook
         """Release network resources."""

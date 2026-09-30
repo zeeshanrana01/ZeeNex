@@ -56,7 +56,7 @@ class OllamaProvider(Provider):
         model: str,
         messages: list[ChatMessage],
         temperature: float | None = None,
-    ) -> AsyncIterator[str]:
+    ) -> AsyncIterator[str | dict[str, Any]]:
         options = {"temperature": temperature} if temperature is not None else None
         try:
             stream = await self._client.chat(
@@ -66,6 +66,13 @@ class OllamaProvider(Provider):
                 options=options,
             )
             async for chunk in stream:
+                if chunk.message and chunk.message.tool_calls:
+                    for tool in chunk.message.tool_calls:
+                        yield {
+                            "type": "tool_call",
+                            "name": tool.function.name,
+                            "arguments": tool.function.arguments,
+                        }
                 if chunk.message and chunk.message.content:
                     yield chunk.message.content
         except ResponseError as exc:

@@ -19,7 +19,8 @@ class Settings(BaseSettings):
         "Use Markdown for structure when it helps readability."
     )
 
-    # Behaviour
+    # Database
+    database_url: str = "zeenexus.db"
     allow_cloud_fallback: bool = True
     request_timeout_seconds: float = 120.0
     model_cache_ttl_seconds: float = 30.0

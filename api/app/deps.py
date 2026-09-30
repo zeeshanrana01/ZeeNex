@@ -1,11 +1,12 @@
 from typing import Annotated
 
 from fastapi import Depends, Request
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
 from app.providers.registry import ProviderRegistry
 from app.services.chat import ChatService
-
+from app.db.session import get_db
 
 def get_app_settings(request: Request) -> Settings:
     return request.app.state.settings
@@ -17,6 +18,7 @@ def get_registry(request: Request) -> ProviderRegistry:
 
 SettingsDep = Annotated[Settings, Depends(get_app_settings)]
 RegistryDep = Annotated[ProviderRegistry, Depends(get_registry)]
+DBDep = Annotated[AsyncSession, Depends(get_db)]
 
 
 def get_chat_service(registry: RegistryDep, settings: SettingsDep) -> ChatService:

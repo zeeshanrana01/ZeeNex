@@ -46,7 +46,7 @@ export async function fetchModels(refresh = false, signal?: AbortSignal): Promis
 }
 
 export interface StreamChatOptions {
-  messages: { role: Role; content: string }[];
+  messages: { role: Role; content: string; images?: string[] }[];
   selection: ModelSelection;
   signal: AbortSignal;
   onMeta: (meta: StreamMeta) => void;
@@ -120,4 +120,17 @@ export async function streamChat({
   }
   if (buffer.trim()) handle(buffer);
   if (!finished) throw new ApiError("The connection closed before the reply finished.");
+}
+
+export async function uploadImage(file: File): Promise<{ url: string; filename: string }> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const res = await fetch(`${API_BASE}/images/upload`, {
+    method: "POST",
+    body: formData,
+  });
+
+  if (!res.ok) throw new ApiError(await errorMessage(res), res.status);
+  return (await res.json()) as { url: string; filename: string };
 }
